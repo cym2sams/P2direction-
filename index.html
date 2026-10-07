@@ -363,7 +363,7 @@
     </div>
 
     <script>
-        // 🌐 Supabase 初始化連線設定 (陳老師：此處已為您套用專屬 API 參數)
+        // 🌐 Supabase 初始化連線設定
         const supabaseUrl = 'https://kmohdcvzcbftnceknotu.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttb2hkY3Z6Y2JmdG5jZWtub3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNjUwNjIsImV4cCI6MjEwNjk0MTA2Mn0.8u_f--SmH4O8ajZNZZazNR7IYzxPi-56N9Llyvc3jtU';
         const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
@@ -433,6 +433,7 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
+        // 🔄 切換班別時，動態更新第二個選單
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
@@ -789,7 +790,7 @@
                 compass.releasePointerCapture(e.pointerId);
                 compass.style.transition = 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)'; compass.style.zIndex = 100;
                 let compassRect = compass.getBoundingClientRect();
-                let cCenter = { x: compassRect.left + compassRect.width / 2, y: compassRect.top + compassRect.height / 2 };
+                let cCenter = { x: compassRect.left + compassRect.width / 2, y: topRect = compassRect.top + compassRect.height / 2 };
                 let closestGrid = null, minDistance = Infinity;
                 document.querySelectorAll('.grid-item').forEach(grid => {
                     let gRect = grid.getBoundingClientRect();
@@ -1041,8 +1042,9 @@
             showScreen("login-screen");
         }
 
+        // 🌟 DOM 載入後立刻執行初始化（包含預生成 3A 班學號）
         window.addEventListener("DOMContentLoaded", async () => {
-            handleClassChange();
+            handleClassChange(); // 🚀 關鍵修正：在網頁一載入時，立即主動執行一次，生成預設學號！
             await fetchLeaderboard();
             renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
         });
