@@ -464,7 +464,6 @@
                 }
             } catch (err) {
                 console.warn("成績雲端上傳失敗，寫入本地快取：", err);
-                // 離線降級備份
                 let record = leaderboardData.find(item => item.classId === classId && item.studentId === studentId);
                 if (record) {
                     record.attempts = (record.attempts || 1) + 1;
@@ -521,10 +520,12 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 切換班別時，動態更新第二個選單
+        // 🔄 切換班別時，動態更新第二個選單 (防禦性填充機制)
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
+            if (!classSelect || !idSelect) return;
+            
             const selectedClass = classSelect.value;
             idSelect.innerHTML = "";
             
@@ -1050,4 +1051,220 @@
                 
                 renderMapAndCompass(-1, -1);
                 
-                let wrongPool = mapGrid.filter(p => p !== placeA && p !== plac
+                let wrongPool = mapGrid.filter(p => p !== placeA && p !== placeB).sort(() => Math.random() - 0.5);
+                let opts = [placeA].concat(wrongPool.slice(0, 3)).sort(() => Math.random() - 0.5);
+                let btnHtml = "";
+                opts.forEach(opt => {
+                    btnHtml += `<button onclick="checkAnswer('${opt}', 3, '${placeB}', ${pair.a}, ${pair.b})">${opt}</button>`;
+                });
+                document.getElementById("options-area").innerHTML = btnHtml;
+                setTimeout(initLevel2CompassDrag, 150);
+                
+            } else if (questionType === 2) {
+                // 【題型 C】：公園在學校的哪一方？
+                let pair, expectedDir, attempts = 0;
+                do {
+                    pair = allMapPairs[Math.floor(Math.random() * allMapPairs.length)];
+                    expectedDir = getRelativeDirName(pair.abs);
+                    attempts++;
+                } while (expectedDir === lastAnswer && attempts < 15);
+                
+                let placeB = mapGrid[pair.b], placeA = mapGrid[pair.a];
+                currentCorrectAnswer = expectedDir;
+                lastAnswer = expectedDir;
+                currentQuestionDir = currentCorrectAnswer;
+                
+                document.getElementById("question-box").innerHTML = `請看地圖和右側方向標。<br><strong>${placeA}</strong> 在 <strong>${placeB}</strong> 的哪一方？<br><span style="font-size:16px; color:#e67e22;">💡 提示：你可以用手指拖動方向標，放到地圖上比對方向！</span>`;
+                
+                renderMapAndCompass(-1, -1); 
+                renderDirectionButtons(placeB, pair.a, pair.b);
+                setTimeout(initLevel2CompassDrag, 150);
+                
+            } else {
+                // 【題型 D】：小熊路線追蹤
+                let p, targetEnd, attempts = 0;
+                do {
+                    p = allPaths[Math.floor(Math.random() * allPaths.length)];
+                    targetEnd = mapGrid[p.end];
+                    attempts++;
+                } while (targetEnd === lastAnswer && attempts < 15);
+                
+                currentCorrectAnswer = targetEnd;
+                lastAnswer = targetEnd;
+                let dir1 = getRelativeDirName(p.firstAbs), dir2 = getRelativeDirName(p.secondAbs);
+                
+                document.getElementById("question-box").innerHTML = `
+                    小熊在 <strong>${mapGrid[p.start]}</strong>。<br>
+                    先向 <strong style="color:#2c3e50;">${dir1}</strong> 走 1 格，再向 <strong style="color:#2c3e50;">${dir2}</strong> 走 1 格。<br>
+                    牠最後會到達哪裡？<br><span style="font-size:16px; color:#e67e22;">💡 提示：你可以拖動方向標輔助尋找方向！</span>
+                `;
+                renderMapAndCompass(p.start, -1);
+                
+                let opts = [mapGrid[p.end], "公園", "圖書館", "小食店", "巴士站", "學校", "花園"];
+                opts = Array.from(new Set(opts)).slice(0, 4).sort(() => Math.random() - 0.5);
+                
+                let btnHtml = "";
+                opts.forEach(opt => btnHtml += `<button onclick="checkAnswer('${opt}', 3, '${mapGrid[p.start]}', ${p.end}, ${p.start})">${opt}</button>`);
+                document.getElementById("options-area").innerHTML = btnHtml;
+                setTimeout(initLevel2CompassDrag, 150);
+            }
+        }
+        
+        // 🏁 核心渲染：第二、三關地圖指南針（完全獨立藍色重構）
+        function renderMapAndCompass(centerIdx, targetIdx = -1, obIdx = -1) {
+            let html = `<div class="map-wrapper"><div class="grid-container" id="grid-parent">`;
+            mapGrid.forEach((place, i) => {
+                let css = "grid-item";
+                if (i === centerIdx) css += " center-highlight";
+                if (i === targetIdx) css += " path-highlight";
+                if (i === obIdx) css += " obstacle-highlight";
+                let text = place;
+                if (i === obIdx) text += " 🚧";
+                html += `<div id="grid-${i}" class="${css}">${text}</div>`;
+            });
+            html += `</div>`;
+            
+            let nIdx = (currentNorthAngle / 90) % 4;
+            const miniTextCoords = [ {x: 55, y: 1}, {x: 102, y: 55}, {x: 55, y: 109}, {x: 1, y: 55} ];
+            let miniCoords = miniTextCoords[nIdx];
+            
+            // 💙 透過變更 SVG 中的 stroke 及 fill 屬性為藍色調（#2980b9, #3498db），並將 N / 北 文字設為藍色，保證第二、三關為耀眼藍色
+            html += `
+                <div class="compass-slot" id="compass-slot">
+                    <div class="compass-container" id="mini-compass">
+                        <svg width="110" height="110" viewBox="0 0 110 110" style="background: transparent;">
+                            <g transform="rotate(${currentNorthAngle}, 55, 55)">
+                                <line x1="55" y1="35" x2="55" y2="80" stroke="#2980b9" stroke-width="3" stroke-linecap="square" />
+                                <line x1="30" y1="55" x2="80" y2="55" stroke="#2980b9" stroke-width="3" stroke-linecap="square" />
+                                <polygon points="55,18 48,35 62,35" fill="#3498db" />
+                            </g>
+                        </svg>
+                        <div style="position: absolute; left: ${miniCoords.x - 15}px; top: ${miniCoords.y - 15}px; width: 30px; height: 30px; line-height: 30px; font-size: 19px; font-weight: bold; color: #3498db; text-align: center; z-index: 15;">
+                            ${currentNorthLabel}
+                        </div>
+                    </div>
+                </div></div>`;
+            document.getElementById("visual-area").innerHTML = html;
+        }
+
+        function renderDirectionButtons(placeB, targetGridIdx, centerIdx) {
+            let btnHtml = "";
+            dirNames.forEach(dir => btnHtml += `<button onclick="checkAnswer('${dir}', ${currentLevel}, '${placeB}', ${targetGridIdx}, ${centerIdx})">${dir}</button>`);
+            document.getElementById("options-area").innerHTML = btnHtml;
+        }
+
+        function checkAnswer(answer, level, extraParam, targetGridIdx, centerIdx, obIdx = -1) {
+            let hint = document.getElementById("hint-box");
+            if (answer === currentCorrectAnswer) {
+                let points = (level === 2 ? 20 : 30);
+                if (!isHintStateActive) consecutiveCorrect++;
+                player.score += points;
+                document.getElementById("score-display").innerText = player.score;
+                
+                triggerCorrectEffect(points, () => {
+                    if (consecutiveCorrect >= 2) {
+                        if (level === 2) { 
+                            triggerLevelTransition(3); 
+                            return;
+                        }
+                        consecutiveCorrect = 0;
+                    }
+                    nextQuestion();
+                }, "答對了！");
+            } else {
+                consecutiveCorrect = 0; 
+                isHintStateActive = true; 
+                isRetryMode = true;
+                document.getElementById("streak-counter").innerText = `0 / 2`;
+                hint.style.display = "block"; 
+                document.querySelectorAll("button").forEach(b => b.disabled = true);
+                
+                setTimeout(() => {
+                    const compass = document.getElementById("mini-compass");
+                    const centerGrid = document.getElementById(`grid-${centerIdx}`);
+                    const slot = document.getElementById("compass-slot");
+                    if (compass && centerGrid && slot) {
+                        compass.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                        let sRect = slot.getBoundingClientRect();
+                        let gRect = centerGrid.getBoundingClientRect();
+                        let sCenter = { x: sRect.left + sRect.width / 2, y: sRect.top + sRect.height / 2 };
+                        let gCenter = { x: gRect.left + gRect.width / 2, y: gRect.top + gRect.height / 2 };
+                        compassTx = gCenter.x - sCenter.x;
+                        compassTy = gCenter.y - sCenter.y;
+                        compass.style.transform = `translate(${compassTx}px, ${compassTy}px) scale(1.05)`;
+                    }
+                }, 100);
+                
+                let specificHintText = "";
+                if (level === 2) {
+                    specificHintText = `
+                        看清楚！方向標已自動疊在 <strong>『${extraParam}』</strong>（橙色中心點）上面！<br>
+                        請對照右側的方向尺，看清楚方向，再親自點選按鈕！
+                    `;
+                } else if (level === 3) {
+                    if (currentTypeID === 0) {
+                        specificHintText = `
+                            請看地圖！方向尺已吸附到 <strong>『${extraParam}』</strong>（橙色中心點）上面！<br>
+                            對照方向尺的刻度與黑色箭頭，想一想：哪一個方向看過去是目標建築物？
+                        `;
+                    } else if (currentTypeID === 1) {
+                        specificHintText = `
+                            請看地圖！方向尺已吸附到 <strong>『${extraParam}』</strong>（橙色中心點）上面！<br>
+                            對照方向尺，沿著 <strong>『${currentQuestionDir}方』</strong> 的黑色刻度看出去，那裡住著哪一棟建築物？
+                        `;
+                    } else if (currentTypeID === 2) {
+                        specificHintText = `
+                            請對照方向尺！以 <strong>『${extraParam}』</strong>（橙色中心點）為出發中心，<br>
+                            看一看要朝哪一個方位前進，才能走到目標建築物？
+                        `;
+                    } else {
+                        renderMapAndCompass(centerIdx, -1);
+                        specificHintText = `
+                            小熊從亮起綠色的起點出發。<br>
+                            請看地圖，一步一步跟著題目數：先走 1 格，再走 1 格，試著找出最後的目的地！
+                        `;
+                    }
+                }
+                
+                hint.innerHTML = `<div class="hint-header"><span>✏️</span> <span>再試一次！請仔細觀察</span></div>${specificHintText}`;
+                
+                setTimeout(() => { 
+                    hint.style.display = "none"; 
+                    document.querySelectorAll("button").forEach(b => b.disabled = false); 
+                }, 4000); 
+            }
+        }
+
+        // 🏁 遊戲結束結算：即時同步至 Google 試算表並回傳全校排名
+        async function endGame() {
+            if (timer) clearInterval(timer);
+            document.getElementById("final-score").innerText = player.score;
+            document.getElementById("rank-sentence-box").innerHTML = `⏳ 正在將成績同步至 Google Sheet，計算全校排名中...`;
+            
+            showScreen("leaderboard-screen");
+            
+            // ☁️ 上傳至 Google Apps Script 後台
+            const rank = await submitScoreToCloud(player.classId, player.studentId, player.score);
+            
+            if (rank > 0) {
+                document.getElementById("rank-sentence-box").innerHTML = `🎉 你現時在全校排名是第 <span style="font-size:30px; color:#e74c3c;">${rank}</span> 位！`;
+            } else {
+                document.getElementById("rank-sentence-box").innerHTML = `🎉 挑戰完成！分數已成功登記！`;
+            }
+            
+            renderLeaderboardTable("end-leaderboard-body", "end-leaderboard-container", true);
+        }
+
+        function backToLoginScreen() {
+            fetchCloudLeaderboard();
+            showScreen("login-screen");
+        }
+
+        // 🏁 DOM 載入安全防禦性初始化
+        window.addEventListener("DOMContentLoaded", () => {
+            handleClassChange(); // 確保學號下拉選單一開始就裝滿可選項！
+            fetchCloudLeaderboard(); // 立即連線同步 Google Sheet 數據
+        });
+    </script>
+</body>
+</html>
