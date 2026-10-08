@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>東南西北方向大探險（雲端版）</title>
+    <title>東南西北方向大探險</title>
     <!-- 引入 Supabase-js 官方 CDN 函式庫 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,9 +32,7 @@
             box-sizing: border-box;
         }
         .active { display: block; }
-        
         h1, h2, h3 { color: #2c3e50; margin: 10px 0; }
-        
         button { 
             background-color: #3498db; 
             color: white; 
@@ -50,7 +48,7 @@
         button:hover { background-color: #2980b9; }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         
-        /* 🚀 關鍵修復：解除 select 上的觸控手勢封鎖，恢復原生點擊響應 */
+        /* 🚀 關鍵修復：解除 select 上的觸控封鎖，恢復原生點擊響應 */
         select { 
             font-size: 18px; 
             padding: 12px 10px; 
@@ -60,14 +58,11 @@
             text-align: center; 
             border-radius: 8px; 
             border: 2px solid #bdc3c7; 
-            background-color: #ffffff; 
+            background-color: #fff; 
             cursor: pointer;
             touch-action: manipulation !important;
             pointer-events: auto !important;
-            -webkit-user-select: auto !important;
-            user-select: auto !important;
         }
-        
         #game-header { 
             display: flex; 
             justify-content: space-between; 
@@ -96,7 +91,6 @@
             font-weight: bold;
             color: #2c3e50; 
         }
-        
         .highlight-focus {
             background-color: #f1c40f !important;
             color: #000000 !important;
@@ -104,7 +98,6 @@
             border-radius: 4px;
             box-shadow: 0 0 8px rgba(241, 196, 15, 0.8);
         }
-        
         #correct-toast {
             display: none;
             position: absolute;
@@ -256,14 +249,11 @@
             box-sizing: border-box;
         }
         .draggable-block:active { cursor: grabbing; background-color: #d35400; }
-        
         .map-wrapper { display: flex; justify-content: center; align-items: center; gap: 25px; flex-wrap: wrap; margin: 15px 0; position: relative; }
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 280px; position: relative; }
         .grid-item { background-color: #fff9e6; border: 2px solid #f39c12; padding: 14px 0; font-size: 17px; font-weight: bold; border-radius: 10px; text-align: center; position: relative; z-index: 1; }
-        
         .center-highlight { background-color: #e67e22 !important; color: white; border-color: #d35400; }
         .path-highlight { background-color: #2ecc71 !important; color: white; border-color: #27ae60; box-shadow: 0 0 10px #2ecc71; }
-        
         .compass-slot {
             width: 110px;
             height: 110px;
@@ -284,7 +274,6 @@
             z-index: 100;
         }
         .compass-container:active { cursor: grabbing; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 16px; }
         th, td { border: 1px solid #ddd; padding: 8px 4px; text-align: center; }
         th { background-color: #2ecc71; color: white; }
@@ -294,12 +283,10 @@
     </style>
 </head>
 <body>
-    <!-- 1. 登入介面 -->
     <div id="login-screen" class="screen active">
         <h1>🧭 東南西北大探險</h1>
         <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 8px;">請選擇你的身份：</p>
-        
-        <select id="class-select" onchange="handleClassChange()">
+        <select id="class-select">
             <option value="3A">3A 班</option>
             <option value="3B">3B 班</option>
             <option value="3C">3C 班</option>
@@ -307,64 +294,27 @@
             <option value="3E">3E 班</option>
             <option value="老師">老師</option>
         </select><br>
-        
-        <!-- 🚀 關鍵加固：直接在 HTML 原生預設 30 個號碼，保證點擊絕對有選單！ -->
-        <select id="student-id-select">
-            <option value="01 號">01 號</option>
-            <option value="02 號">02 號</option>
-            <option value="03 號">03 號</option>
-            <option value="04 號">04 號</option>
-            <option value="05 號">05 號</option>
-            <option value="06 號">06 號</option>
-            <option value="07 號">07 號</option>
-            <option value="08 號">08 號</option>
-            <option value="09 號">09 號</option>
-            <option value="10 號">10 號</option>
-            <option value="11 號">11 號</option>
-            <option value="12 號">12 號</option>
-            <option value="13 號">13 號</option>
-            <option value="14 號">14 號</option>
-            <option value="15 號">15 號</option>
-            <option value="16 號">16 號</option>
-            <option value="17 號">17 號</option>
-            <option value="18 號">18 號</option>
-            <option value="19 號">19 號</option>
-            <option value="20 號">20 號</option>
-            <option value="21 號">21 號</option>
-            <option value="22 號">22 號</option>
-            <option value="23 號">23 號</option>
-            <option value="24 號">24 號</option>
-            <option value="25 號">25 號</option>
-            <option value="26 號">26 號</option>
-            <option value="27 號">27 號</option>
-            <option value="28 號">28 號</option>
-            <option value="29 號">29 號</option>
-            <option value="30 號">30 號</option>
-        </select><br>
-        
+        <select id="student-id-select"></select><br>
         <button onclick="goToRules()" style="margin-top: 10px; padding: 12px 35px;">進入遊戲 ▶</button>
-        
         <div class="leaderboard-wrap">
             <h3 style="color: #d35400; margin: 5px 0;">🏆 雲端即時排行榜（前 10 名）</h3>
             <div id="login-leaderboard-container">
-                <div class="empty-tips">🌐 正在連線至雲端資料庫...</div>
+                <div class="empty-tips">🌐 正在載入雲端排行榜...</div>
             </div>
         </div>
     </div>
 
-    <!-- 2. 規則介面 -->
     <div id="rules-screen" class="screen">
         <h2>📜 遊戲挑戰規則</h2>
         <p style="font-size: 18px; text-align: left; line-height: 1.6; max-width: 500px; margin: auto;">
             1\. 遊戲限時 <strong>2 分鐘（120 秒）</strong>，答對題數越多分數越高！<br>
             2\. 第一、二關須在<strong>沒有看提示的情況下，連續答對 2 題</strong>才能升級！<br>
-            3\. 第三關為<strong>無限連勝大挑戰</strong>，答錯了連勝會歸 0 喔！
+            3\. 第三關為<strong>無限終極大挑戰</strong>，挑戰你的最高連勝紀錄，若答錯了連勝會歸 0 喔！
         </p>
         <br>
         <button onclick="startGame()">▶ 開始挑戰</button>
     </div>
 
-    <!-- 3. 過場晉級畫面 -->
     <div id="transition-screen" class="screen">
         <div style="padding: 20px 10px;">
             <div style="font-size: 55px; margin-bottom: 10px;" id="trans-badge">🎉</div>
@@ -374,7 +324,6 @@
         </div>
     </div>
 
-    <!-- 4. 主遊戲介面 -->
     <div id="game-screen" class="screen">
         <div id="correct-toast">
             <div class="toast-icon">✔️</div>
@@ -387,21 +336,16 @@
             <span>連續答對：<span class="streak-pill" id="streak-counter">0 / 2</span></span>
             <span>⭐ 分數：<span id="score-display">0</span></span>
         </div>
-        
         <div id="question-box">題目載入中...</div>
-        
         <div id="hint-box"></div>
         <div id="visual-area"></div>
         <div id="options-area"></div>
     </div>
 
-    <!-- 5. 結束結算介面 -->
     <div id="leaderboard-screen" class="screen">
         <h2>🏆 挑戰結束！</h2>
         <p style="font-size: 20px; margin: 5px 0;">你的本局分數是：<strong id="final-score" style="font-size:28px; color:#e74c3c;"></strong> 分</p>
-        
         <div id="rank-sentence-box" style="font-size: 22px; color: #27ae60; font-weight: bold; background-color: #e8f8f0; padding: 10px; border-radius: 10px; margin: 12px auto; max-width: 480px;"></div>
-        
         <h3 style="margin-top: 15px;">前 10 名排行榜</h3>
         <div id="end-leaderboard-container"></div>
         <br>
@@ -409,10 +353,17 @@
     </div>
 
     <script>
-        // 🌐 Supabase 連線
-        const supabaseUrl = 'https://kmohdcvzcbftnceknotu.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttb2hkY3Z6Y2JmdG5jZWtub3R1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzNjUwNjIsImV4cCI6MjEwNjk0MTA2Mn0.8u_f--SmH4O8ajZNZZazNR7IYzxPi-56N9Llyvc3jtU';
-        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        // 🌐 全新專屬 Supabase 實時連線參數
+        const supabaseUrl = 'https://xotrwgmulffrqjkwxlql.supabase.co'; 
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdHJ3Z211bGZmcnFqa3d4bHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTgwNzUsImV4cCI6MjEwNjk0MTA3NX0.auB7SXlPivmoOLd_dHRU9PeegA9n1CrlQ7nbDB99yGY';
+        let supabase = null;
+        try {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            }
+        } catch (e) {
+            console.error("Supabase 載入失敗:", e);
+        }
 
         let player = { classId: "3A", studentId: "01 號", score: 0 };
         let timeLeft = 120, timer = null;
@@ -427,12 +378,12 @@
         let questionCount = 0;
         let lastAnswer = ""; 
         let compassTx = 0, compassTy = 0;
-
         const teacherList = ["陳麗嫦校長", "陳珮容老師", "梁穎欣主任", "丁紹斌老師", "陳子殷老師", "林肇鈴主任", "王柏榮老師"];
         let leaderboardData = [];
         
-        // 🔄 異步載入雲端排行榜（帶完整錯誤防護）
+        // 🔄 異步從雲端載入排行榜（背景非同步處理，不干擾任何 UI 事件）
         async function fetchLeaderboard() {
+            if (!supabase) return;
             try {
                 const { data, error } = await supabase
                     .from('leaderboard')
@@ -441,14 +392,10 @@
                     .order('attempts', { ascending: true })
                     .limit(10);
                 
-                if (error) {
-                    console.warn("Supabase 查詢反饋:", error);
-                    leaderboardData = [];
-                } else {
-                    leaderboardData = data || [];
-                }
+                if (error) throw error;
+                leaderboardData = data || [];
             } catch (err) {
-                console.error("無法連線至雲端排行榜:", err);
+                console.warn("無法與雲端同步排行榜:", err);
                 leaderboardData = [];
             }
         }
@@ -483,7 +430,7 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 切換班別事件處理
+        // 🔄 換身份同步更新
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
@@ -493,13 +440,17 @@
             if (classSelect.value === "老師") {
                 teacherList.forEach(name => {
                     const opt = document.createElement("option");
-                    opt.value = name; opt.innerText = name; idSelect.appendChild(opt);
+                    opt.value = name;
+                    opt.textContent = name;
+                    idSelect.appendChild(opt);
                 });
             } else {
                 for (let i = 1; i <= 30; i++) {
                     const opt = document.createElement("option");
                     const numText = (i < 10 ? "0" + i : i) + " 號";
-                    opt.value = numText; opt.innerText = numText; idSelect.appendChild(opt);
+                    opt.value = numText;
+                    opt.textContent = numText;
+                    idSelect.appendChild(opt);
                 }
             }
         }
@@ -527,8 +478,10 @@
                 </table>
             `;
             const tbody = document.getElementById(tbodyId);
+            leaderboardData.sort((a, b) => b.score - a.score || a.attempts - b.attempts);
+            const top10 = leaderboardData.slice(0, 10);
             let html = "";
-            leaderboardData.forEach((row, idx) => {
+            top10.forEach((row, idx) => {
                 const isMe = highlightMe && (row.classId === player.classId && row.studentId === player.studentId);
                 const rankDisplay = idx === 0 ? "🥇 1" : idx === 1 ? "🥈 2" : idx === 2 ? "🥉 3" : (idx + 1);
                 html += `
@@ -548,11 +501,15 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
+
         function goToRules() {
-            player.classId = document.getElementById("class-select").value;
-            player.studentId = document.getElementById("student-id-select").value;
+            const classSelect = document.getElementById("class-select");
+            const idSelect = document.getElementById("student-id-select");
+            player.classId = classSelect ? classSelect.value : "3A";
+            player.studentId = idSelect ? idSelect.value : "01 號";
             showScreen("rules-screen");
         }
+
         function startGame() {
             player.score = 0; timeLeft = 120; currentLevel = 1; consecutiveCorrect = 0;
             level3QuestionPool = []; lastAnswer = "";
@@ -994,7 +951,7 @@
                     nextQuestion();
                 }, "答對了！");
             } else {
-                consecutiveCorrect = 0; // 💥 答錯立即歸 0
+                consecutiveCorrect = 0; 
                 isHintStateActive = true; isRetryMode = true;
                 
                 if (currentLevel === 3) {
@@ -1043,37 +1000,39 @@
             }
         }
 
-        // 🌐 遊戲結束結算，將成績同步存檔於 Supabase 雲端
+        // 🌐 結束遊戲：同步將最高成績安全存入 Supabase 資料庫
         async function endGame() {
             if (timer) clearInterval(timer);
             document.getElementById("final-score").innerText = player.score;
             
-            try {
-                const { data: existingRecord } = await supabase
-                    .from('leaderboard')
-                    .select('*')
-                    .eq('classId', player.classId)
-                    .eq('studentId', player.studentId)
-                    .maybeSingle();
+            if (supabase) {
+                try {
+                    const { data: existingRecord } = await supabase
+                        .from('leaderboard')
+                        .select('*')
+                        .eq('classId', player.classId)
+                        .eq('studentId', player.studentId)
+                        .maybeSingle();
 
-                if (existingRecord) {
-                    const updatedAttempts = (existingRecord.attempts || 1) + 1;
-                    const newHighScore = Math.max(player.score, existingRecord.score);
-                    
-                    await supabase
-                        .from('leaderboard')
-                        .update({ score: newHighScore, attempts: updatedAttempts })
-                        .eq('id', existingRecord.id);
-                } else {
-                    await supabase
-                        .from('leaderboard')
-                        .insert([{ classId: player.classId, studentId: player.studentId, score: player.score, attempts: 1 }]);
+                    if (existingRecord) {
+                        const updatedAttempts = (existingRecord.attempts || 1) + 1;
+                        const newHighScore = Math.max(player.score, existingRecord.score);
+                        
+                        await supabase
+                            .from('leaderboard')
+                            .update({ score: newHighScore, attempts: updatedAttempts })
+                            .eq('id', existingRecord.id);
+                    } else {
+                        await supabase
+                            .from('leaderboard')
+                            .insert([{ classId: player.classId, studentId: player.studentId, score: player.score, attempts: 1 }]);
+                    }
+                } catch (err) {
+                    console.error("雲端排行榜存取失敗:", err);
                 }
-            } catch (err) {
-                console.error("雲端存檔失敗:", err);
+                await fetchLeaderboard();
             }
             
-            await fetchLeaderboard();
             const myRank = leaderboardData.findIndex(item => item.classId === player.classId && item.studentId === player.studentId) + 1;
             document.getElementById("rank-sentence-box").innerHTML = `🎉 你現時的排名是第 <span style="font-size:28px; color:#e74c3c;">${myRank > 0 ? myRank : 'N/A'}</span> 位！`;
             
@@ -1083,15 +1042,22 @@
 
         async function backToLoginScreen() {
             const loginContainer = document.getElementById("login-leaderboard-container");
-            loginContainer.innerHTML = `<div class="empty-tips">🌐 正在從雲端更新排行榜數據...</div>`;
+            if (loginContainer) {
+                loginContainer.innerHTML = `<div class="empty-tips">🌐 正在從雲端更新排行榜數據...</div>`;
+            }
             await fetchLeaderboard();
             renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
             showScreen("login-screen");
         }
 
-        // 🚀 DOM 載入後立刻執行
         window.addEventListener("DOMContentLoaded", () => {
+            const classSelect = document.getElementById("class-select");
+            if (classSelect) {
+                classSelect.addEventListener("change", handleClassChange);
+            }
             handleClassChange();
+            
+            // 背景非同步加載雲端排行榜，防卡死
             fetchLeaderboard().then(() => {
                 renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
             });
