@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>東南西北方向大探險</title>
-    <!-- 引入 Supabase-js 官方 CDN 函式庫 -->
+    <!-- 1. 引入 Supabase 官方 CDN 函式庫 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
@@ -48,7 +48,7 @@
         button:hover { background-color: #2980b9; }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         
-        /* 🚀 關鍵修復：解除 select 上的觸控封鎖，恢復原生點擊響應 */
+        /* 🚀 關鍵修復：解除 select 上的觸控手勢封鎖，恢復原生點擊響應 */
         select { 
             font-size: 18px; 
             padding: 12px 10px; 
@@ -353,16 +353,18 @@
     </div>
 
     <script>
-        // 🌐 全新專屬 Supabase 實時連線參數
+        // 🌐 修正：安全、正確地初始化 Supabase 客戶端（防止變數同名覆蓋卡死）
         const supabaseUrl = 'https://xotrwgmulffrqjkwxlql.supabase.co'; 
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdHJ3Z211bGZmcnFqa3d4bHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTgwNzUsImV4cCI6MjEwNjk0MTA3NX0.auB7SXlPivmoOLd_dHRU9PeegA9n1CrlQ7nbDB99yGY';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdHJ3Z211bGZmcnFqa3d4bHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTgwNzUsImV4cCI6MjEwNjk3NDA3NX0.auB7SXlPivmoOLd_dHRU9PeegA9n1CrlQ7nbDB99yGY';
         let supabase = null;
         try {
-            if (window.supabase) {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
                 supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+            } else {
+                console.error("Supabase SDK 載入異常！");
             }
         } catch (e) {
-            console.error("Supabase 載入失敗:", e);
+            console.error("Supabase 連線失敗:", e);
         }
 
         let player = { classId: "3A", studentId: "01 號", score: 0 };
@@ -430,7 +432,7 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 換身份同步更新
+        // 🔄 換身份同步更新（修正：函式與監聽器名稱完全綁定，消除卡死 Bug）
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
@@ -1028,7 +1030,7 @@
                             .insert([{ classId: player.classId, studentId: player.studentId, score: player.score, attempts: 1 }]);
                     }
                 } catch (err) {
-                    console.error("雲端排行榜存取失敗:", err);
+                    console.error("雲端存檔失敗:", err);
                 }
                 await fetchLeaderboard();
             }
@@ -1050,14 +1052,17 @@
             showScreen("login-screen");
         }
 
+        // 🚀 核心加載綁定
         window.addEventListener("DOMContentLoaded", () => {
             const classSelect = document.getElementById("class-select");
             if (classSelect) {
+                // 修正：事件監聽完全綁定到最新重構的「handleClassChange」函式
                 classSelect.addEventListener("change", handleClassChange);
             }
+            // 立即執行一次初始加載，生成第一張班級學號選單
             handleClassChange();
             
-            // 背景非同步加載雲端排行榜，防卡死
+            // 背景非同步加載雲端排行榜，絕不因網路延遲卡死 UI
             fetchLeaderboard().then(() => {
                 renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
             });
