@@ -17,6 +17,8 @@
             -webkit-user-select: none; 
             touch-action: pan-y;
             overflow-x: hidden;
+            position: relative;
+            min-height: 96vh;
         }
         .screen { 
             display: none; 
@@ -48,7 +50,6 @@
         button:hover { background-color: #2980b9; }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         
-        /* 🚀 關鍵修復：解除 select 上的觸控手勢封鎖，恢復原生點擊響應 */
         select { 
             font-size: 18px; 
             padding: 12px 10px; 
@@ -162,18 +163,18 @@
         .cross-h { width: 100px; height: 4px; left: 80px; top: 128px; }
         .compass-arrow-black { 
             position: absolute; 
-            width: 0; height: 0;
+            width: 0; height: 0; 
             border-left: 15px solid transparent; 
             border-right: 15px solid transparent; 
             border-bottom: 25px solid #000; 
             left: 115px; top: 55px; 
         }
         .rotatable-cross { 
-            width: 260px; height: 260px;
-            position: absolute; left: 0; top: 0;
-            transform-origin: 130px 130px;
-            transition: transform 0.3s ease;
-            z-index: 1;
+            width: 260px; height: 260px; 
+            position: absolute; left: 0; top: 0; 
+            transform-origin: 130px 130px; 
+            transition: transform 0.3s ease; 
+            z-index: 1; 
         }
         .scaffold-svg-overlay {
             position: absolute;
@@ -232,7 +233,7 @@
             z-index: 5;
         }
         .draggable-block { 
-            position: absolute;
+            position: absolute; 
             width: 50px; height: 50px; 
             background-color: #e67e22; 
             color: #ffffff; 
@@ -246,7 +247,7 @@
             z-index: 50; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
             touch-action: none; 
-            box-sizing: border-box;
+            box-sizing: border-box; 
         }
         .draggable-block:active { cursor: grabbing; background-color: #d35400; }
         .map-wrapper { display: flex; justify-content: center; align-items: center; gap: 25px; flex-wrap: wrap; margin: 15px 0; position: relative; }
@@ -280,9 +281,31 @@
         .my-rank { background-color: #fff2cc !important; font-weight: bold; }
         .leaderboard-wrap { margin-top: 20px; border-top: 2px dashed #bdc3c7; padding-top: 15px; }
         .empty-tips { padding: 25px 10px; color: #7f8c8d; font-size: 16px; font-style: italic; background-color: #f9f9f9; border-radius: 10px; margin: 10px 0; border: 1px dashed #bdc3c7; }
+        
+        /* 🎨 右下角署名樣式 */
+        .credit-footer {
+            position: absolute;
+            bottom: 8px;
+            right: 15px;
+            font-size: 13px;
+            color: #7f8c8d;
+            font-weight: 500;
+            pointer-events: none;
+            letter-spacing: 0.5px;
+        }
+        @media (max-height: 600px) {
+            .credit-footer {
+                position: relative;
+                bottom: 0; right: 0;
+                margin-top: 15px;
+                display: block;
+                text-align: right;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 1. 登入介面 -->
     <div id="login-screen" class="screen active">
         <h1>🧭 東南西北大探險</h1>
         <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 8px;">請選擇你的身份：</p>
@@ -304,6 +327,7 @@
         </div>
     </div>
 
+    <!-- 2. 規則介面 -->
     <div id="rules-screen" class="screen">
         <h2>📜 遊戲挑戰規則</h2>
         <p style="font-size: 18px; text-align: left; line-height: 1.6; max-width: 500px; margin: auto;">
@@ -315,6 +339,7 @@
         <button onclick="startGame()">▶ 開始挑戰</button>
     </div>
 
+    <!-- 3. 過場晉級畫面 -->
     <div id="transition-screen" class="screen">
         <div style="padding: 20px 10px;">
             <div style="font-size: 55px; margin-bottom: 10px;" id="trans-badge">🎉</div>
@@ -324,6 +349,7 @@
         </div>
     </div>
 
+    <!-- 4. 主遊戲介面 -->
     <div id="game-screen" class="screen">
         <div id="correct-toast">
             <div class="toast-icon">✔️</div>
@@ -342,6 +368,7 @@
         <div id="options-area"></div>
     </div>
 
+    <!-- 5. 結束結算介面 -->
     <div id="leaderboard-screen" class="screen">
         <h2>🏆 挑戰結束！</h2>
         <p style="font-size: 20px; margin: 5px 0;">你的本局分數是：<strong id="final-score" style="font-size:28px; color:#e74c3c;"></strong> 分</p>
@@ -352,19 +379,20 @@
         <button onclick="backToLoginScreen()">🔄 返回首頁再次挑戰</button>
     </div>
 
+    <!-- 🎨 右下角署名 -->
+    <div class="credit-footer">Designed by 陳綺雯老師</div>
+
     <script>
-        // 🌐 修正：安全、正確地初始化 Supabase 客戶端（防止變數同名覆蓋卡死）
-        const supabaseUrl = 'https://xotrwgmulffrqjkwxlql.supabase.co'; 
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvdHJ3Z211bGZmcnFqa3d4bHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEzOTgwNzUsImV4cCI6MjEwNjk3NDA3NX0.auB7SXlPivmoOLd_dHRU9PeegA9n1CrlQ7nbDB99yGY';
+        // 🌐 全新專屬 Supabase 實時連線參數 (已去除尾端多餘路徑，完美標準規格)
+        const supabaseUrl = 'https://bbzzngqurtesgavjifth.supabase.co'; 
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJienpuZ3F1cnRlc2dhdmppZnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NjkwMzMsImV4cCI6MjEwNzM0NTAzM30.uBsoj4mmfQOkL8JUfW_lljajDqt52vuJ5Qydi3q8EMg';
         let supabase = null;
         try {
             if (window.supabase && typeof window.supabase.createClient === 'function') {
                 supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-            } else {
-                console.error("Supabase SDK 載入異常！");
             }
         } catch (e) {
-            console.error("Supabase 連線失敗:", e);
+            console.error("Supabase 連線故障:", e);
         }
 
         let player = { classId: "3A", studentId: "01 號", score: 0 };
@@ -383,7 +411,7 @@
         const teacherList = ["陳麗嫦校長", "陳珮容老師", "梁穎欣主任", "丁紹斌老師", "陳子殷老師", "林肇鈴主任", "王柏榮老師"];
         let leaderboardData = [];
         
-        // 🔄 異步從雲端載入排行榜（背景非同步處理，不干擾任何 UI 事件）
+        // 🌐 從 Supabase 即時拉取排行榜
         async function fetchLeaderboard() {
             if (!supabase) return;
             try {
@@ -432,7 +460,7 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 換身份同步更新（修正：函式與監聽器名稱完全綁定，消除卡死 Bug）
+        // 🔄 換身份選單聯動
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
@@ -461,7 +489,7 @@
             const container = document.getElementById(tableContainerId);
             if (!container) return;
             if (leaderboardData.length === 0) {
-                container.innerHTML = `<div class="empty-tips">📝 目前尚未有挑戰記錄，快來成為今天的第一名吧！</div>`;
+                container.innerHTML = `<div class="empty-tips">📝 目前尚未有挑戰記錄，快來成為今日的第一名吧！</div>`;
                 return;
             }
             const tableId = tbodyId === "login-leaderboard-body" ? "login-table" : "end-table";
@@ -1056,13 +1084,12 @@
         window.addEventListener("DOMContentLoaded", () => {
             const classSelect = document.getElementById("class-select");
             if (classSelect) {
-                // 修正：事件監聽完全綁定到最新重構的「handleClassChange」函式
                 classSelect.addEventListener("change", handleClassChange);
             }
-            // 立即執行一次初始加載，生成第一張班級學號選單
+            // 立即執行初始加載，生成第一張班級學號選單
             handleClassChange();
             
-            // 背景非同步加載雲端排行榜，絕不因網路延遲卡死 UI
+            // 背景非同步加載雲端排行榜，絕不因網絡延遲卡死 UI
             fetchLeaderboard().then(() => {
                 renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
             });
