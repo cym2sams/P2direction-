@@ -50,6 +50,7 @@
         button:hover { background-color: #2980b9; }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         
+        /* 🚀 關鍵修復：解除 select 上的觸控封鎖，恢復原生點擊響應 */
         select { 
             font-size: 18px; 
             padding: 12px 10px; 
@@ -230,7 +231,7 @@
             border: 2px dashed #e0e0e0;
             border-radius: 8px;
             box-sizing: border-box;
-            z-index: 5;
+            z-index: 5; 
         }
         .draggable-block { 
             position: absolute; 
@@ -309,7 +310,9 @@
     <div id="login-screen" class="screen active">
         <h1>🧭 東南西北大探險</h1>
         <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 8px;">請選擇你的身份：</p>
-        <select id="class-select">
+        
+        <!-- 🚀 關鍵加固：直接在標籤上綁定 onchange，確保點選即刻響應 -->
+        <select id="class-select" onchange="handleClassChange()">
             <option value="3A">3A 班</option>
             <option value="3B">3B 班</option>
             <option value="3C">3C 班</option>
@@ -317,12 +320,47 @@
             <option value="3E">3E 班</option>
             <option value="老師">老師</option>
         </select><br>
-        <select id="student-id-select"></select><br>
+        
+        <!-- 🚀 核心救命修復：在 HTML 中原生預先寫入 30 個選項，徹底杜絕 Safari 空白選單點擊卡死！ -->
+        <select id="student-id-select">
+            <option value="01 號">01 號</option>
+            <option value="02 號">02 號</option>
+            <option value="03 號">03 號</option>
+            <option value="04 號">04 號</option>
+            <option value="05 號">05 號</option>
+            <option value="06 號">06 號</option>
+            <option value="07 號">07 號</option>
+            <option value="08 號">08 號</option>
+            <option value="09 號">09 號</option>
+            <option value="10 號">10 號</option>
+            <option value="11 號">11 號</option>
+            <option value="12 號">12 號</option>
+            <option value="13 號">13 號</option>
+            <option value="14 號">14 號</option>
+            <option value="15 號">15 號</option>
+            <option value="16 號">16 號</option>
+            <option value="17 號">17 號</option>
+            <option value="18 號">18 號</option>
+            <option value="19 號">19 號</option>
+            <option value="20 號">20 號</option>
+            <option value="21 號">21 號</option>
+            <option value="22 號">22 號</option>
+            <option value="23 號">23 號</option>
+            <option value="24 號">24 號</option>
+            <option value="25 號">25 號</option>
+            <option value="26 號">26 號</option>
+            <option value="27 號">27 號</option>
+            <option value="28 號">28 號</option>
+            <option value="29 號">29 號</option>
+            <option value="30 號">30 號</option>
+        </select><br>
+        
         <button onclick="goToRules()" style="margin-top: 10px; padding: 12px 35px;">進入遊戲 ▶</button>
+        
         <div class="leaderboard-wrap">
             <h3 style="color: #d35400; margin: 5px 0;">🏆 雲端即時排行榜（前 10 名）</h3>
             <div id="login-leaderboard-container">
-                <div class="empty-tips">🌐 正在載入雲端排行榜...</div>
+                <div class="empty-tips">🌐 正在連線至雲端排行榜...</div>
             </div>
         </div>
     </div>
@@ -383,16 +421,17 @@
     <div class="credit-footer">Designed by 陳綺雯老師</div>
 
     <script>
-        // 🌐 全新專屬 Supabase 實時連線參數 (已去除尾端多餘路徑，完美標準規格)
-        const supabaseUrl = 'https://bbzzngqurtesgavjifth.supabase.co'; 
+        // 🌐 全新專屬 Supabase 連線參數（已修正為標準主機 URL 格式）
+        const supabaseUrl = 'https://bbzzngqurtesgavjifth.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJienpuZ3F1cnRlc2dhdmppZnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NjkwMzMsImV4cCI6MjEwNzM0NTAzM30.uBsoj4mmfQOkL8JUfW_lljajDqt52vuJ5Qydi3q8EMg';
-        let supabase = null;
+        
+        let dbClient = null;
         try {
             if (window.supabase && typeof window.supabase.createClient === 'function') {
-                supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                dbClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
             }
         } catch (e) {
-            console.error("Supabase 連線故障:", e);
+            console.error("Supabase 建立連線異常:", e);
         }
 
         let player = { classId: "3A", studentId: "01 號", score: 0 };
@@ -413,19 +452,23 @@
         
         // 🌐 從 Supabase 即時拉取排行榜
         async function fetchLeaderboard() {
-            if (!supabase) return;
+            if (!dbClient) return;
             try {
-                const { data, error } = await supabase
+                const { data, error } = await dbClient
                     .from('leaderboard')
                     .select('*')
                     .order('score', { ascending: false })
                     .order('attempts', { ascending: true })
                     .limit(10);
                 
-                if (error) throw error;
-                leaderboardData = data || [];
+                if (error) {
+                    console.warn("Supabase 讀取錯誤:", error);
+                    leaderboardData = [];
+                } else {
+                    leaderboardData = data || [];
+                }
             } catch (err) {
-                console.warn("無法與雲端同步排行榜:", err);
+                console.error("無法連線雲端資料庫:", err);
                 leaderboardData = [];
             }
         }
@@ -460,14 +503,16 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 換身份選單聯動
+        // 🔄 換身份選單聯動（同步清空重建，支援切換老師名單）
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
             if (!classSelect || !idSelect) return;
             
+            const selectedClass = classSelect.value;
             idSelect.innerHTML = "";
-            if (classSelect.value === "老師") {
+            
+            if (selectedClass === "老師") {
                 teacherList.forEach(name => {
                     const opt = document.createElement("option");
                     opt.value = name;
@@ -536,7 +581,7 @@
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
             player.classId = classSelect ? classSelect.value : "3A";
-            player.studentId = idSelect ? idSelect.value : "01 號";
+            player.studentId = (idSelect && idSelect.value) ? idSelect.value : "01 號";
             showScreen("rules-screen");
         }
 
@@ -1035,9 +1080,9 @@
             if (timer) clearInterval(timer);
             document.getElementById("final-score").innerText = player.score;
             
-            if (supabase) {
+            if (dbClient) {
                 try {
-                    const { data: existingRecord } = await supabase
+                    const { data: existingRecord } = await dbClient
                         .from('leaderboard')
                         .select('*')
                         .eq('classId', player.classId)
@@ -1048,12 +1093,12 @@
                         const updatedAttempts = (existingRecord.attempts || 1) + 1;
                         const newHighScore = Math.max(player.score, existingRecord.score);
                         
-                        await supabase
+                        await dbClient
                             .from('leaderboard')
                             .update({ score: newHighScore, attempts: updatedAttempts })
                             .eq('id', existingRecord.id);
                     } else {
-                        await supabase
+                        await dbClient
                             .from('leaderboard')
                             .insert([{ classId: player.classId, studentId: player.studentId, score: player.score, attempts: 1 }]);
                     }
@@ -1080,20 +1125,19 @@
             showScreen("login-screen");
         }
 
-        // 🚀 核心加載綁定
-        window.addEventListener("DOMContentLoaded", () => {
-            const classSelect = document.getElementById("class-select");
-            if (classSelect) {
-                classSelect.addEventListener("change", handleClassChange);
-            }
-            // 立即執行初始加載，生成第一張班級學號選單
+        // 🚀 最保險的雙重啟動機制：不再單獨依賴 DOMContentLoaded，立刻同步加載！
+        function bootApp() {
             handleClassChange();
-            
-            // 背景非同步加載雲端排行榜，絕不因網絡延遲卡死 UI
             fetchLeaderboard().then(() => {
                 renderLeaderboardTable("login-leaderboard-body", "login-leaderboard-container", false);
             });
-        });
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", bootApp);
+        } else {
+            bootApp();
+        }
     </script>
 </body>
 </html>
