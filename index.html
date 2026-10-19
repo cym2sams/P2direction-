@@ -50,7 +50,6 @@
         button:hover { background-color: #2980b9; }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         
-        /* 🚀 關鍵修復：解除 select 上的觸控封鎖，恢復原生點擊響應 */
         select { 
             font-size: 18px; 
             padding: 12px 10px; 
@@ -164,18 +163,18 @@
         .cross-h { width: 100px; height: 4px; left: 80px; top: 128px; }
         .compass-arrow-black { 
             position: absolute; 
-            width: 0; height: 0; 
+            width: 0; height: 0;
             border-left: 15px solid transparent; 
             border-right: 15px solid transparent; 
             border-bottom: 25px solid #000; 
             left: 115px; top: 55px; 
         }
         .rotatable-cross { 
-            width: 260px; height: 260px; 
-            position: absolute; left: 0; top: 0; 
-            transform-origin: 130px 130px; 
-            transition: transform 0.3s ease; 
-            z-index: 1; 
+            width: 260px; height: 260px;
+            position: absolute; left: 0; top: 0;
+            transform-origin: 130px 130px;
+            transition: transform 0.3s ease;
+            z-index: 1;
         }
         .scaffold-svg-overlay {
             position: absolute;
@@ -231,7 +230,7 @@
             border: 2px dashed #e0e0e0;
             border-radius: 8px;
             box-sizing: border-box;
-            z-index: 5; 
+            z-index: 5;
         }
         .draggable-block { 
             position: absolute; 
@@ -248,7 +247,7 @@
             z-index: 50; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
             touch-action: none; 
-            box-sizing: border-box; 
+            box-sizing: border-box;
         }
         .draggable-block:active { cursor: grabbing; background-color: #d35400; }
         .map-wrapper { display: flex; justify-content: center; align-items: center; gap: 25px; flex-wrap: wrap; margin: 15px 0; position: relative; }
@@ -311,7 +310,6 @@
         <h1>🧭 東南西北大探險</h1>
         <p style="font-size: 18px; color: #7f8c8d; margin-bottom: 8px;">請選擇你的身份：</p>
         
-        <!-- 🚀 關鍵加固：直接在標籤上綁定 onchange，確保點選即刻響應 -->
         <select id="class-select" onchange="handleClassChange()">
             <option value="3A">3A 班</option>
             <option value="3B">3B 班</option>
@@ -321,7 +319,6 @@
             <option value="老師">老師</option>
         </select><br>
         
-        <!-- 🚀 核心救命修復：在 HTML 中原生預先寫入 30 個選項，徹底杜絕 Safari 空白選單點擊卡死！ -->
         <select id="student-id-select">
             <option value="01 號">01 號</option>
             <option value="02 號">02 號</option>
@@ -421,7 +418,7 @@
     <div class="credit-footer">Designed by 陳綺雯老師</div>
 
     <script>
-        // 🌐 全新專屬 Supabase 連線參數（已修正為標準主機 URL 格式）
+        // 🌐 全新專屬 Supabase 實時連線參數
         const supabaseUrl = 'https://bbzzngqurtesgavjifth.supabase.co';
         const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJienpuZ3F1cnRlc2dhdmppZnRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NjkwMzMsImV4cCI6MjEwNzM0NTAzM30.uBsoj4mmfQOkL8JUfW_lljajDqt52vuJ5Qydi3q8EMg';
         
@@ -476,6 +473,10 @@
         const mapGrid = ["公園", "圖書館", "遊樂場", "醫院", "學校", "小食店", "巴士站", "糖果店", "花園"];
         const compassCoordinates = [{ x: 104, y: 4 }, { x: 204, y: 104 }, { x: 104, y: 204 }, { x: 4, y: 104 }];
         
+        // 🗺️ 九宮格索引關係（陳老師項目專用） [source: 1]
+        // Row 0: 0(公園) 1(圖書館) 2(遊樂場) [source: 1]
+        // Row 1: 3(醫院) 4(學校) 5(小食店) [source: 1]
+        // Row 2: 6(巴士站) 7(糖果店) 8(花園) [source: 1]
         const allMapPairs = [
             { b: 3, a: 0, abs: 0 }, { b: 4, a: 1, abs: 0 }, { b: 5, a: 2, abs: 0 },
             { b: 6, a: 3, abs: 0 }, { b: 7, a: 4, abs: 0 }, { b: 8, a: 5, abs: 0 },
@@ -488,6 +489,8 @@
             { b: 4, a: 3, abs: 3 }, { b: 5, a: 4, abs: 3 },
             { b: 7, a: 6, abs: 3 }, { b: 8, a: 7, abs: 3 }
         ];
+
+        // 🐾 小熊追蹤路徑
         const allPaths = [
             { start: 0, firstAbs: 1, secondAbs: 2, end: 4 },
             { start: 8, firstAbs: 3, secondAbs: 0, end: 4 },
@@ -503,16 +506,14 @@
         let currentTypeID = 0; 
         let currentQuestionDir = ""; 
 
-        // 🔄 換身份選單聯動（同步清空重建，支援切換老師名單）
+        // 🔄 換身份選單聯動
         function handleClassChange() {
             const classSelect = document.getElementById("class-select");
             const idSelect = document.getElementById("student-id-select");
             if (!classSelect || !idSelect) return;
             
-            const selectedClass = classSelect.value;
             idSelect.innerHTML = "";
-            
-            if (selectedClass === "老師") {
+            if (classSelect.value === "老師") {
                 teacherList.forEach(name => {
                     const opt = document.createElement("option");
                     opt.value = name;
@@ -1011,9 +1012,48 @@
             document.getElementById("options-area").innerHTML = btnHtml;
         }
 
+        // 🚀 關鍵安全修正：驗證同方向直線上的「多重正確答案」（Collinear Buildings Validation） [source: 1]
+        function getCollinearBuilding(centerIdx, currentCorrectAns) {
+            try {
+                // 1. 找出正確答案和起點在九宮格中的索引 [source: 1]
+                const correctIdx = mapGrid.indexOf(currentCorrectAns);
+                if (centerIdx < 0 || correctIdx < 0) return null;
+                
+                // 2. 計算 X、Y 座標（0 ➔ (0,0), 1 ➔ (1,0), 8 ➔ (2,2) 等） [source: 1]
+                const xCenter = centerIdx % 3, yCenter = Math.floor(centerIdx / 3);
+                const xCorrect = correctIdx % 3, yCorrect = Math.floor(correctIdx / 3);
+                
+                // 3. 計算方向向量 (dx, dy)
+                const dx = xCorrect - xCenter;
+                const dy = yCorrect - yCenter;
+                
+                // 4. 如果這是一條完美的直線延伸（dx 為 0 或是 dy 為 0），且距離為 1
+                if ((dx === 0 && Math.abs(dy) === 1) || (dy === 0 && Math.abs(dx) === 1)) {
+                    // 5. 算出在同一個方向上，距離為 2 的「遠端同線建築物」座標 [source: 1]
+                    const farX = xCenter + dx * 2;
+                    const farY = yCenter + dy * 2;
+                    
+                    // 6. 確保座標沒有超出 3x3 九宮格邊界 [source: 1]
+                    if (farX >= 0 && farX < 3 && farY >= 0 && farY < 3) {
+                        const farIdx = farY * 3 + farX;
+                        return mapGrid[farIdx]; // 回傳同方向上延伸出去的正確答案（例如選了公園，而原本答案是圖書館） [source: 1]
+                    }
+                }
+            } catch (err) {
+                console.error("Collinear 判定錯誤:", err);
+            }
+            return null;
+        }
+
         function checkAnswer(answer, level, extraParam, targetGridIdx, centerIdx) {
             let hint = document.getElementById("hint-box");
-            if (answer === currentCorrectAnswer) {
+            
+            // 🚀 核心修復：同線多重正確答案校驗 [source: 1]
+            // 如果玩家按下的答案剛好是「同方向延伸出去的遠端建築物」（例如正確是圖書館，但按了公園），直接放行視為正確！ [source: 1]
+            const alternativeCorrect = getCollinearBuilding(centerIdx, currentCorrectAnswer);
+            const isFullyCorrect = (answer === currentCorrectAnswer) || (alternativeCorrect && answer === alternativeCorrect);
+            
+            if (isFullyCorrect) {
                 let points = (level === 2 ? 20 : 30);
                 if (!isHintStateActive) consecutiveCorrect++;
                 player.score += points;
@@ -1125,7 +1165,7 @@
             showScreen("login-screen");
         }
 
-        // 🚀 最保險的雙重啟動機制：不再單獨依賴 DOMContentLoaded，立刻同步加載！
+        // 🚀 核心加載綁定
         function bootApp() {
             handleClassChange();
             fetchLeaderboard().then(() => {
